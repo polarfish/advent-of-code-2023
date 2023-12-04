@@ -23,20 +23,10 @@ public class Day4 extends Day {
 
     @Override
     public String part1(String input) {
-        int result = input.lines()
-            .mapToInt(line -> {
-                String[] split = line.split(": ")[1].split(" \\| ");
-                Set<Integer> winningNumbers = Arrays.stream(split[0].trim().split("\\s+"))
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toSet());
-                Set<Integer> yourNumbers = Arrays.stream(split[1].trim().split("\\s+"))
-                    .map(Integer::parseInt)
-                    .collect(Collectors.toSet());
-                yourNumbers.retainAll(winningNumbers);
-                return yourNumbers.isEmpty()
-                    ? 0
-                    : 1 << (yourNumbers.size() - 1);
-            })
+        int[] winningNumbersCounters = calculateWinningNumbersCounters(input);
+
+        int result = Arrays.stream(winningNumbersCounters)
+            .map(counter -> counter == 0 ? 0 : 1 << (counter - 1))
             .sum();
 
         return String.valueOf(result);
@@ -44,7 +34,24 @@ public class Day4 extends Day {
 
     @Override
     public String part2(String input) {
-        int[] arrWinningCards = input.lines()
+        int[] winningNumbersCounters = calculateWinningNumbersCounters(input);
+
+        int[] cardsCounters = new int[winningNumbersCounters.length];
+        Arrays.fill(cardsCounters, 1);
+
+        for (int i = 0; i < winningNumbersCounters.length; i++) {
+            for (int j = 0; j < winningNumbersCounters[i]; j++) {
+                cardsCounters[i + j + 1] += cardsCounters[i];
+            }
+        }
+
+        int totalCards = Arrays.stream(cardsCounters).sum();
+
+        return String.valueOf(totalCards);
+    }
+
+    private static int[] calculateWinningNumbersCounters(String input) {
+        return input.lines()
             .mapToInt(line -> {
                 String[] split = line.split(": ")[1].split(" \\| ");
                 Set<Integer> winningNumbers = Arrays.stream(split[0].trim().split("\\s+"))
@@ -58,18 +65,5 @@ public class Day4 extends Day {
                 return yourNumbers.size();
             })
             .toArray();
-
-        int[] arrCardsCount = new int[arrWinningCards.length];
-        Arrays.fill(arrCardsCount, 1);
-
-        for (int i = 0; i < arrWinningCards.length; i++) {
-            for (int j = 0; j < arrWinningCards[i]; j++) {
-                arrCardsCount[i + j + 1] += arrCardsCount[i];
-            }
-        }
-
-        int totalCards = Arrays.stream(arrCardsCount).sum();
-
-        return String.valueOf(totalCards);
     }
 }
