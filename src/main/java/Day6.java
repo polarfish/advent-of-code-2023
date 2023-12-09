@@ -49,7 +49,7 @@ public class Day6 extends Day {
             .mapToLong(i ->
                 LongStream.range(1, table[0][i] - 1)
                     .parallel()
-
+                    .filter(sec -> (table[0][i] - sec) * sec > table[1][i])
                     .count()
             )
             .reduce(1, (i1, i2) -> i1 * i2);
