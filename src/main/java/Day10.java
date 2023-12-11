@@ -88,14 +88,13 @@ public class Day10 extends Day {
         Set<Point> visitedLoop = new HashSet<>();
         visitedLoop.add(sPoint);
 
-        int result = 0;
+        int result;
         main:
         while (!steps.isEmpty()) {
             Step curr = steps.remove();
             for (Point p : determineNextStepPoint(curr, map)) {
                 int nextStepNum = curr.stepNum() + 1;
                 if (visitedLoop.contains(p)) {
-                    result = nextStepNum;
                     break main;
                 }
                 visitedLoop.add(p);
