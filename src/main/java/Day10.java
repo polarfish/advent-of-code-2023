@@ -1,5 +1,3 @@
-import java.util.ArrayDeque;
-import java.util.Deque;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -30,87 +28,26 @@ public class Day10 extends Day {
 
     @Override
     public String part1(String input) {
-        char[][] map = input.lines()
-            .map(String::toCharArray)
-            .toArray(char[][]::new);
-
-        Point sPoint = null;
-        for (int y = 0; y < map.length; y++) {
-            for (int x = 0; x < map[y].length; x++) {
-                if ('S' == map[y][x]) {
-                    sPoint = new Point(x, y);
-                    map[y][x] = determinePipe(x, y, map);
-                }
-            }
-        }
-
-        Deque<Step> steps = new ArrayDeque<>();
-        steps.add(new Step(sPoint, null, 0));
-        Set<Point> visited = new HashSet<>();
-        visited.add(sPoint);
-
-        int result = 0;
-        main:
-        while (!steps.isEmpty()) {
-            Step curr = steps.remove();
-            for (Point p : determineNextStepPoint(curr, map)) {
-                int nextStepNum = curr.stepNum() + 1;
-                if (visited.contains(p)) {
-                    result = nextStepNum;
-                    break main;
-                }
-                visited.add(p);
-                steps.add(new Step(p, curr.to(), nextStepNum));
-            }
-        }
-
-        return String.valueOf(result);
+        char[][] map = buildMap(input);
+        Set<Point> pipe = buildPipe(map);
+        return String.valueOf(pipe.size() / 2);
     }
 
     @Override
     public String part2(String input) {
-        char[][] map = input.lines()
-            .map(String::toCharArray)
-            .toArray(char[][]::new);
+        char[][] map = buildMap(input);
 
-        Point sPoint = null;
-        for (int y = 0; y < map.length; y++) {
-            for (int x = 0; x < map[y].length; x++) {
-                if ('S' == map[y][x]) {
-                    sPoint = new Point(x, y);
-                    map[y][x] = determinePipe(x, y, map);
-                }
-            }
-        }
-
-        Deque<Step> steps = new ArrayDeque<>();
-        steps.add(new Step(sPoint, null, 0));
-        Set<Point> visitedLoop = new HashSet<>();
-        visitedLoop.add(sPoint);
-
-        int result;
-        main:
-        while (!steps.isEmpty()) {
-            Step curr = steps.remove();
-            for (Point p : determineNextStepPoint(curr, map)) {
-                int nextStepNum = curr.stepNum() + 1;
-                if (visitedLoop.contains(p)) {
-                    break main;
-                }
-                visitedLoop.add(p);
-                steps.add(new Step(p, curr.to(), nextStepNum));
-            }
-        }
+        Set<Point> pipe = buildPipe(map);
 
         for (int y = 0; y < map.length; y++) {
             for (int x = 0; x < map[y].length; x++) {
-                if (!visitedLoop.contains(new Point(x, y))) {
+                if (!pipe.contains(new Point(x, y))) {
                     map[y][x] = '.';
                 }
             }
         }
 
-        result = 0;
+        int result = 0;
         for (int y = 0; y < map.length; y++) {
             boolean isInside = false;
             for (int x = 0; x < map[y].length; x++) {
@@ -125,42 +62,60 @@ public class Day10 extends Day {
         return String.valueOf(result);
     }
 
-    private Point[] determineNextStepPoint(Step s, char[][] map) {
-        Point curr = s.to();
-        Point prev = s.from();
-        if (prev == null) {
-            return switch (map[curr.y()][curr.x()]) {
-                case '|' -> new Point[]{new Point(curr.x(), curr.y() - 1), new Point(curr.x(), curr.y() + 1)};
-                case '-' -> new Point[]{new Point(curr.x() - 1, curr.y()), new Point(curr.x() + 1, curr.y())};
-                case 'L' -> new Point[]{new Point(curr.x(), curr.y() - 1), new Point(curr.x() + 1, curr.y())};
-                case 'F' -> new Point[]{new Point(curr.x(), curr.y() + 1), new Point(curr.x() + 1, curr.y())};
-                case 'J' -> new Point[]{new Point(curr.x(), curr.y() - 1), new Point(curr.x() - 1, curr.y())};
-                case '7' -> new Point[]{new Point(curr.x(), curr.y() + 1), new Point(curr.x() - 1, curr.y())};
-                default -> new Point[]{};
-            };
-        } else {
-            return switch (map[curr.y()][curr.x()]) {
-                case '|' -> prev.y() == curr.y() - 1
-                    ? new Point[]{new Point(curr.x(), curr.y() + 1)}
-                    : new Point[]{new Point(curr.x(), curr.y() - 1)};
-                case '-' -> prev.x() == curr.x() - 1
-                    ? new Point[]{new Point(curr.x() + 1, curr.y())}
-                    : new Point[]{new Point(curr.x() - 1, curr.y())};
-                case 'L' -> prev.y() == curr.y() - 1
-                    ? new Point[]{new Point(curr.x() + 1, curr.y())}
-                    : new Point[]{new Point(curr.x(), curr.y() - 1)};
-                case 'F' -> prev.y() == curr.y() + 1
-                    ? new Point[]{new Point(curr.x() + 1, curr.y())}
-                    : new Point[]{new Point(curr.x(), curr.y() + 1)};
-                case 'J' -> prev.y() == curr.y() - 1
-                    ? new Point[]{new Point(curr.x() - 1, curr.y())}
-                    : new Point[]{new Point(curr.x(), curr.y() - 1)};
-                case '7' -> prev.y() == curr.y() + 1
-                    ? new Point[]{new Point(curr.x() - 1, curr.y())}
-                    : new Point[]{new Point(curr.x(), curr.y() + 1)};
-                default -> new Point[]{};
-            };
+    private Set<Point> buildPipe(char[][] map) {
+        Point sPoint = null;
+        for (int y = 0; y < map.length; y++) {
+            for (int x = 0; x < map[y].length; x++) {
+                if ('S' == map[y][x]) {
+                    sPoint = new Point(x, y);
+                    map[y][x] = determinePipe(x, y, map);
+                }
+            }
         }
+
+        Set<Point> pipe = new HashSet<>();
+
+        Point next;
+        Point curr = sPoint;
+        Point prev = null;
+        while (!pipe.contains(curr)) {
+            pipe.add(curr);
+            next = determineNextStepPoint(curr, prev, map);
+            prev = curr;
+            curr = next;
+        }
+        return pipe;
+    }
+
+    private static char[][] buildMap(String input) {
+        return input.lines()
+            .map(String::toCharArray)
+            .toArray(char[][]::new);
+    }
+
+    private Point determineNextStepPoint(Point curr, Point prev, char[][] map) {
+        return switch (map[curr.y()][curr.x()]) {
+            case '|' -> prev == null || prev.y() == curr.y() - 1
+                ? new Point(curr.x(), curr.y() + 1)
+                : new Point(curr.x(), curr.y() - 1);
+            case '-' -> prev == null || prev.x() == curr.x() - 1
+                ? new Point(curr.x() + 1, curr.y())
+                : new Point(curr.x() - 1, curr.y());
+            case 'L' -> prev == null || prev.y() == curr.y() - 1
+                ? new Point(curr.x() + 1, curr.y())
+                : new Point(curr.x(), curr.y() - 1);
+            case 'F' -> prev == null || prev.y() == curr.y() + 1
+                ? new Point(curr.x() + 1, curr.y())
+                : new Point(curr.x(), curr.y() + 1);
+            case 'J' -> prev == null || prev.y() == curr.y() - 1
+                ? new Point(curr.x() - 1, curr.y())
+                : new Point(curr.x(), curr.y() - 1);
+            case '7' -> prev == null || prev.y() == curr.y() + 1
+                ? new Point(curr.x() - 1, curr.y())
+                : new Point(curr.x(), curr.y() + 1);
+            default -> null;
+        };
+
     }
 
     private char determinePipe(int x, int y, char[][] map) {
@@ -197,10 +152,6 @@ public class Day10 extends Day {
     }
 
     record Point(int x, int y) {
-
-    }
-
-    record Step(Point to, Point from, int stepNum) {
 
     }
 
